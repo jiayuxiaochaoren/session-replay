@@ -1,0 +1,9 @@
+name: session-replay
+version: 0.1.0
+display_name: Session Replay
+description: Session replay plugin for Hermes Dashboard with timeline, graph, and export views.
+author: Hermes Agent
+backend:
+  module: dashboard.plugin_api
+ui:
+  manifest: dashboard/manifest.json
