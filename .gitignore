@@ -23,3 +23,7 @@ venv/
 
 # Logs
 *.log
+
+prd.md
+
+tests/

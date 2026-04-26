@@ -8,6 +8,12 @@ FILE_MUTATION_TOOLS = {"patch", "write_file", "edit_file", "apply_patch"}
 FILE_RESULT_KEYS = {"path", "file", "filepath", "file_path"}
 
 
+def _normalize_id(value: Any, fallback: str) -> str:
+    if value is None or value == "":
+        return fallback
+    return str(value)
+
+
 def _parse_timestamp(value: str | float | int | None) -> datetime | None:
     if value is None or value == "":
         return None
@@ -317,13 +323,13 @@ def _build_file_change_event(msg: dict[str, Any], pending: dict[str, Any], parse
                 diff = parsed_result.get(key)
                 break
     return {
-        "id": f"{msg.get('id') or 'file-change'}-file",
+        "id": f"{_normalize_id(msg.get('id'), 'file-change')}-file",
         "timestamp": msg.get("timestamp"),
         "type": "file_change",
         "title": "File Change",
         "summary": f"Updated {file_path}",
         "status": "success",
-        "tool_call_id": msg.get("tool_call_id"),
+        "tool_call_id": _normalize_id(msg.get("tool_call_id"), "unknown-tool-call"),
         "tool_name": tool_name,
         "file_path": file_path,
         "diff": diff,
@@ -435,7 +441,7 @@ def parse_messages_to_replay(messages: list[dict[str, Any]], session_id: str | N
 
         if role == "user":
             event = {
-                "id": msg.get("id") or f"user-{index}",
+                "id": _normalize_id(msg.get("id"), f"user-{index}"),
                 "timestamp": timestamp,
                 "type": "user_message",
                 "title": "User Request",
@@ -450,10 +456,11 @@ def parse_messages_to_replay(messages: list[dict[str, Any]], session_id: str | N
 
         if role == "assistant":
             text = _stringify_content(content)
+            assistant_event_id = _normalize_id(msg.get("id"), f"assistant-{index}")
             if _detect_retry(text):
                 retries += 1
                 retry_event = {
-                    "id": (msg.get("id") or f"assistant-{index}") + "-retry",
+                    "id": f"{assistant_event_id}-retry",
                     "timestamp": timestamp,
                     "type": "retry",
                     "title": "Retry",
@@ -466,7 +473,7 @@ def parse_messages_to_replay(messages: list[dict[str, Any]], session_id: str | N
             event_type = "final_answer" if _is_final_assistant(index, messages) else "agent_intent"
             title = "Final Answer" if event_type == "final_answer" else "Agent Intent"
             event = {
-                "id": msg.get("id") or f"assistant-{index}",
+                "id": assistant_event_id,
                 "timestamp": timestamp,
                 "type": event_type,
                 "title": title,
@@ -478,7 +485,7 @@ def parse_messages_to_replay(messages: list[dict[str, Any]], session_id: str | N
             event["stage"] = _build_stage_copy(event)
             events.append(event)
             for call in msg.get("tool_calls") or []:
-                call_id = call.get("id") or f"tool-call-{index}-{tool_calls}"
+                call_id = _normalize_id(call.get("id"), f"tool-call-{index}-{tool_calls}")
                 tool_calls += 1
                 pending_calls[call_id] = {"call": call, "timestamp": timestamp}
                 tool_name = _tool_name(call)
@@ -501,14 +508,14 @@ def parse_messages_to_replay(messages: list[dict[str, Any]], session_id: str | N
             continue
 
         if role == "tool":
-            call_id = msg.get("tool_call_id")
+            call_id = _normalize_id(msg.get("tool_call_id"), f"tool-call-missing-{index}")
             pending = pending_calls.get(call_id, {})
             parsed_result = _safe_json_loads(content)
             is_error = _detect_error_content(content)
             duration_ms = _duration_ms(pending.get("timestamp"), timestamp)
             tool_name = _tool_name(pending.get("call", {})) if pending else None
             event = {
-                "id": msg.get("id") or f"tool-result-{index}",
+                "id": _normalize_id(msg.get("id"), f"tool-result-{index}"),
                 "timestamp": timestamp,
                 "type": "error" if is_error else "tool_result",
                 "title": "Tool Error" if is_error else "Tool Observation",
