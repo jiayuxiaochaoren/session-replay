@@ -4,8 +4,6 @@
 
 Session Replay is a plugin for Hermes Dashboard that turns a raw agent session into a readable, replayable, and shareable execution view.
 
-It is designed for internal Dashboard integration: the plugin is loaded by the same Hermes Dashboard instance and works directly with the host's session data and plugin routes.
-
 ## What it does
 
 Session Replay helps you:

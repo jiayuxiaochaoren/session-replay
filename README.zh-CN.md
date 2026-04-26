@@ -4,8 +4,6 @@ English version: see [README.md](./README.md)
 
 Session Replay 是一个 Hermes Dashboard 插件，用来把原始 agent session 整理成更易读、可回放、可分享的执行轨迹视图。
 
-这个仓库面向 Hermes Dashboard 内部接入场景：插件由同一个 Hermes Dashboard 实例加载，直接使用宿主环境里的 session 数据和插件路由，不讨论外部部署、跨宿主代理或远程连接场景。
-
 ## 插件作用
 
 Session Replay 主要用于：
