@@ -221,6 +221,7 @@
       const value = String(pair[1] == null ? '—' : pair[1]);
       const cardClass = ['summary-card'];
       if (pair[0] === 'Status' || pair[0] === 'Bottleneck') cardClass.push('summary-card-wide');
+      if (pair[0] === 'Current Step') cardClass.push('summary-card-current-step');
       const valueClass = value.length > 18 ? 'summary-value summary-value-compact' : 'summary-value';
       const card = el('div', cardClass.join(' '));
       card.append(el('div', 'summary-label', pair[0]));
@@ -624,12 +625,11 @@
     sessionInput.placeholder = 'Search sessions or enter a session id';
 
     const refreshSessionsButton = el('button', 'ghost-button', 'Refresh Sessions');
-    const generateButton = el('button', 'primary-button', 'Open Session');
-    const playButton = el('button', 'secondary-button', 'Play Replay');
+    const playButton = el('button', 'primary-button', 'Play Replay');
     const exportJsonButton = el('button', 'secondary-button', 'Export JSON');
     const exportHtmlButton = el('button', 'secondary-button', 'Export HTML');
     const status = el('div', 'load-status', 'Ready');
-    topbar.append(sessionSelect, sessionInput, refreshSessionsButton, generateButton, playButton, exportJsonButton, exportHtmlButton, status);
+    topbar.append(sessionSelect, sessionInput, refreshSessionsButton, playButton, exportJsonButton, exportHtmlButton, status);
     const shellIntro = el('div', 'plugin-surface-note', 'Select a Hermes session to inspect the execution flow.');
 
     const summary = el('div', 'summary-grid summary-stage');
@@ -726,7 +726,11 @@
     });
 
     refreshSessionsButton.addEventListener('click', refreshSessions);
-    generateButton.addEventListener('click', loadSelectedSession);
+    sessionInput.addEventListener('keydown', async function (event) {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      await loadSelectedSession();
+    });
 
     playButton.addEventListener('click', function () {
       if (!state.replay) return;
